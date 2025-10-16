@@ -159,6 +159,62 @@
             padding: 0.5rem;
         }
 
+        /* TTS Toggle Switch */
+        .tts-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .tts-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--cream);
+        }
+
+        .tts-toggle {
+            display: none;
+        }
+
+        .tts-slider {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: var(--charcoal);
+            border: 2px solid var(--gold);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tts-slider::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: var(--gold);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .tts-toggle:checked + .tts-slider {
+            background: var(--gold);
+        }
+
+        .tts-toggle:checked + .tts-slider::before {
+            transform: translateX(26px);
+            background: var(--charcoal);
+        }
+
+        .tts-text {
+            font-weight: 500;
+            user-select: none;
+        }
+
         .status-indicator {
             display: flex;
             align-items: center;
@@ -708,6 +764,11 @@
                 width: 100%;
             }
 
+            .tts-controls {
+                width: 100%;
+                justify-content: center;
+            }
+
             .character-selector {
                 width: 100%;
             }
@@ -779,6 +840,13 @@
             </div>
         </div>
         <div class="header-controls">
+            <div class="tts-controls">
+                <label for="ttsToggle" class="tts-label">
+                    <input type="checkbox" id="ttsToggle" class="tts-toggle">
+                    <span class="tts-slider"></span>
+                    <span class="tts-text">TTS</span>
+                </label>
+            </div>
             <div class="character-selector">
                 <label for="characterSelect" style="font-size: 0.9rem; color: var(--cream);">Select Echo:</label>
                 <select id="characterSelect" class="character-select">
@@ -867,6 +935,7 @@
                 this.newChatBtn = document.getElementById('newChatBtn');
                 this.chatList = document.getElementById('chatList');
                 this.characterSelect = document.getElementById('characterSelect');
+                this.ttsToggle = document.getElementById('ttsToggle');
                 this.avatarInitials = document.getElementById('avatarInitials');
                 this.avatarMouth = document.getElementById('avatarMouth');
                 this.avatarStatus = document.getElementById('avatarStatus');
@@ -875,6 +944,7 @@
                 this.visemeTimeouts = [];
                 this.currentChatId = 'chat-1';
                 this.currentCharacter = 'correspondent';
+                this.ttsEnabled = false;
                 this.characters = {};
                 this.chatHistory = {
                     'chat-1': {
@@ -910,6 +980,7 @@
                 });
                 this.newChatBtn.addEventListener('click', () => this.startNewChat());
                 this.characterSelect.addEventListener('change', (e) => this.changeCharacter(e.target.value));
+                this.ttsToggle.addEventListener('change', (e) => this.toggleTTS(e.target.checked));
             }
 
             async loadCharacters() {
@@ -1301,6 +1372,11 @@
                 
                 this.chatMessages.appendChild(messageDiv);
                 this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+                
+                // Speak the message if it's from the bot and TTS is enabled
+                if (sender === 'bot' && this.ttsEnabled) {
+                    this.speakText(text);
+                }
             }
 
             formatTime(date) {
@@ -1351,6 +1427,47 @@
 
             setStatus(status) {
                 this.status.textContent = status;
+            }
+            // TTS Methods
+            toggleTTS(enabled) {
+                this.ttsEnabled = enabled;
+                console.log('TTS enabled:', this.ttsEnabled);
+            }
+
+            async speakText(text) {
+                if (!this.ttsEnabled) return;
+                
+                try {
+                    const response = await fetch('/tts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            text: text,
+                            voice: 'Joanna' // Default voice
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`TTS API error: ${response.status}`);
+                    }
+
+                    const audioBlob = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    
+                    // Play the audio
+                    await audio.play();
+                    
+                    // Clean up the URL after playing
+                    audio.onended = () => {
+                        URL.revokeObjectURL(audioUrl);
+                    };
+
+                } catch (error) {
+                    console.error('TTS Error:', error);
+                }
             }
         }
 
