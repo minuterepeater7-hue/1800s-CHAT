@@ -113,21 +113,65 @@ async function callModalLLM(messages, character) {
     character: character
   };
 
-  const response = await fetch(MODAL_CONFIG.baseURL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(requestBody)
-  });
+  try {
+    const response = await fetch(MODAL_CONFIG.baseURL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Modal API error: ${response.status} - ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Modal API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.response;
+  } catch (error) {
+    console.error("Modal LLM error:", error);
+    // Fallback to simple character responses
+    return getFallbackResponse(character, messages[messages.length - 1]?.content || "");
   }
+}
 
-  const data = await response.json();
-  return data.response;
+// Fallback response system when Modal.com is not available
+function getFallbackResponse(character, userMessage) {
+  const characterData = CHARACTERS[character] || CHARACTERS["georgian-gentleman"];
+  
+  // Simple response patterns based on character
+  const responses = {
+    "georgian-gentleman": [
+      "Good day to you, sir! I must say, that is quite an interesting observation. Pray tell, what brings you to discuss such matters?",
+      "I do beg your pardon, but I find your words most intriguing. Would you care to elaborate on your thoughts?",
+      "How fascinating! I must confess, I have not encountered such a perspective before. What else might you share with me?",
+      "Indeed, that is quite remarkable! I should very much like to hear more of your thoughts on this matter."
+    ],
+    "lady-regent": [
+      "How delightful to make your acquaintance! Your words are quite charming. Pray, what else occupies your thoughts?",
+      "I must say, that is rather clever of you! I should very much like to hear more of your opinions.",
+      "How intriguing! You have quite captured my attention. What other matters might you wish to discuss?",
+      "Indeed, that is most interesting! I find your perspective quite refreshing. Do tell me more."
+    ],
+    "colonial-scholar": [
+      "Fascinating! Your words speak to the very heart of liberty and reason. What other thoughts do you harbor on such matters?",
+      "I must say, that is quite a thoughtful observation! The pursuit of knowledge and justice is indeed paramount. What else concerns you?",
+      "How remarkable! Your perspective aligns with the principles of enlightenment. Pray, what other ideas do you wish to explore?",
+      "Indeed, that is quite profound! The advancement of human understanding is our greatest endeavor. What else might you share?"
+    ],
+    "mr-boz": [
+      "How remarkable! Your words remind me of the many characters I have encountered in my observations of society. What other stories might you share?",
+      "I must say, that is quite a tale! The human condition never ceases to amaze me. What other aspects of life interest you?",
+      "How fascinating! Your perspective offers much food for thought. What other observations do you have about our world?",
+      "Indeed, that is quite a reflection on human nature! I find such insights most valuable. What else might you wish to discuss?"
+    ]
+  };
+  
+  const characterResponses = responses[character] || responses["georgian-gentleman"];
+  const randomResponse = characterResponses[Math.floor(Math.random() * characterResponses.length)];
+  
+  return randomResponse;
 }
 
 // Health check endpoint
