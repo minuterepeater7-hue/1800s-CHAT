@@ -6,30 +6,30 @@
       "use": "@vercel/static"
     },
     {
-      "src": "server.js",
+      "src": "server-cloud.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server.js"
+      "dest": "server-cloud.js"
     },
     {
       "src": "/chat",
-      "dest": "server.js"
+      "dest": "server-cloud.js"
     },
     {
       "src": "/characters",
-      "dest": "server.js"
+      "dest": "server-cloud.js"
     },
     {
       "src": "/tts",
-      "dest": "server.js"
+      "dest": "server-cloud.js"
     },
     {
       "src": "/health",
-      "dest": "server.js"
+      "dest": "server-cloud.js"
     },
     {
       "src": "/(.*)",
