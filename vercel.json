@@ -13,9 +13,9 @@
     }
   ],
   "env": {
-    "AWS_ACCESS_KEY_ID": "@aws_access_key_id",
-    "AWS_SECRET_ACCESS_KEY": "@aws_secret_access_key",
-    "AWS_REGION": "@aws_region",
+    "AWS_ACCESS_KEY_ID": "YOUR_AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY": "YOUR_AWS_SECRET_ACCESS_KEY", 
+    "AWS_REGION": "us-east-1",
     "MODAL_BASE_URL": "https://minuterepeater7-hue--georgian-chat-llm-generate-response.modal.run",
     "MODAL_HEALTH_URL": "https://minuterepeater7-hue--georgian-chat-llm-health-check.modal.run"
   }
