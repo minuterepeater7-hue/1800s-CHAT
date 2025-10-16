@@ -101,6 +101,11 @@ app.get("/characters", (req, res) => {
   res.json(CHARACTERS);
 });
 
+// Serve the main HTML file
+app.get("/", (req, res) => {
+  res.sendFile("index.html", { root: "public" });
+});
+
 // Health check endpoint
 app.get("/health", async (req, res) => {
   try {
