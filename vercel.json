@@ -2,14 +2,34 @@
   "version": 2,
   "builds": [
     {
+      "src": "public/**",
+      "use": "@vercel/static"
+    },
+    {
       "src": "server-simple.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "server-simple.js"
+    },
+    {
+      "src": "/chat",
+      "dest": "server-simple.js"
+    },
+    {
+      "src": "/characters",
+      "dest": "server-simple.js"
+    },
+    {
+      "src": "/health",
+      "dest": "server-simple.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "public/$1"
     }
   ],
   "env": {
