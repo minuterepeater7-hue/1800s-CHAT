@@ -1,0 +1,22 @@
+{
+  "name": "1800s-chat",
+  "version": "1.0.0",
+  "description": "Georgian Chat - Historical Avatar Bot with TTS and mouth animation",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "cloud": "node server-cloud.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["chatbot", "tts", "historical", "avatar", "ollama", "polly"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2"
+  }
+}
