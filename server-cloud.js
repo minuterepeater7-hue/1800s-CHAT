@@ -277,12 +277,30 @@ app.post("/tts", async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Georgian Chat server running on http://localhost:${PORT}`);
-  console.log(`Using LLM provider: ${MODAL_CONFIG.provider}`);
-  console.log(`Modal URL: ${MODAL_CONFIG.baseURL}`);
-  console.log("Make sure AWS credentials are configured");
-});
+// Vercel serverless function handler
+export default async (req, res) => {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-export default app;
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  // Handle the request with Express app
+  return app(req, res);
+};
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Georgian Chat server running on http://localhost:${PORT}`);
+    console.log(`Using LLM provider: ${MODAL_CONFIG.provider}`);
+    console.log(`Modal URL: ${MODAL_CONFIG.baseURL}`);
+    console.log("Make sure AWS credentials are configured");
+  });
+}
