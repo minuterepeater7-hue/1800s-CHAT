@@ -47,6 +47,7 @@ def load_model():
     timeout=300,
     min_containers=1
 )
+@app.web_endpoint(method="POST")
 def generate_response(messages: List[Dict[str, str]], character: str = "georgian-gentleman") -> Dict[str, str]:
     """Generate a response using the Mistral model"""
     global model, tokenizer
@@ -138,6 +139,7 @@ GLOBAL INSTRUCTIONS FOR ALL CHARACTERS:
     timeout=60,
     min_containers=1
 )
+@app.web_endpoint(method="GET")
 def health_check() -> Dict[str, str]:
     """Health check endpoint"""
     return {
