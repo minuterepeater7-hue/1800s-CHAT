@@ -1,0 +1,7 @@
+modal
+transformers
+torch
+accelerate
+sentencepiece
+protobuf
+requests

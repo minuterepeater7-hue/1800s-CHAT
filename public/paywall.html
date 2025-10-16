@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Georgian Chat - Upgrade Required</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Playfair Display', 'Georgia', serif;
+            background: linear-gradient(135deg, #001F3F 0%, #800020 50%, #FDF6E3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2C1810;
+        }
+
+        .paywall-container {
+            background: #FDF6E3;
+            border: 8px solid #D4AF37;
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .paywall-container::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(45deg, #D4AF37, #F4E4BC, #D4AF37);
+            border-radius: 25px;
+            z-index: -1;
+        }
+
+        .crown-icon {
+            font-size: 4rem;
+            color: #D4AF37;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #001F3F;
+            margin-bottom: 1rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #800020;
+            margin-bottom: 2rem;
+            font-style: italic;
+        }
+
+        .usage-info {
+            background: rgba(212, 175, 55, 0.1);
+            border: 2px solid #D4AF37;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .usage-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #800020;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #2C1810;
+            margin-top: 0.25rem;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .pricing-card {
+            background: white;
+            border: 3px solid #D4AF37;
+            border-radius: 15px;
+            padding: 2rem;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .pricing-card.featured {
+            border-color: #A52A2A;
+            background: linear-gradient(135deg, #FDF6E3 0%, #F4E4BC 100%);
+        }
+
+        .pricing-card.featured::before {
+            content: 'MOST POPULAR';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #A52A2A;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            color: #001F3F;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            color: #800020;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-period {
+            color: #2C1810;
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .plan-features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-icon {
+            color: #D4AF37;
+            margin-right: 0.5rem;
+        }
+
+        .upgrade-btn {
+            background: linear-gradient(135deg, #D4AF37 0%, #F4E4BC 100%);
+            color: #001F3F;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .upgrade-btn:hover {
+            background: linear-gradient(135deg, #F4E4BC 0%, #D4AF37 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+        }
+
+        .upgrade-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .free-tier-info {
+            background: rgba(128, 0, 32, 0.1);
+            border: 2px solid #800020;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .free-tier-info h3 {
+            color: #800020;
+            margin-bottom: 1rem;
+        }
+
+        .free-tier-info p {
+            color: #2C1810;
+            line-height: 1.6;
+        }
+
+        .loading {
+            display: none;
+            color: #800020;
+            font-style: italic;
+        }
+
+        .error {
+            color: #A52A2A;
+            background: rgba(165, 42, 42, 0.1);
+            border: 1px solid #A52A2A;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .success {
+            color: #2C1810;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid #D4AF37;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .paywall-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="paywall-container">
+        <div class="crown-icon">👑</div>
+        <h1>Upgrade Required</h1>
+        <p class="subtitle">Your free tier usage has been exhausted</p>
+
+        <div class="usage-info">
+            <h3>Current Usage</h3>
+            <div class="usage-stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="messages-used">0</div>
+                    <div class="stat-label">Messages Used</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="compute-used">0s</div>
+                    <div class="stat-label">Compute Time</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="tokens-used">0</div>
+                    <div class="stat-label">Tokens Used</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="free-tier-info">
+            <h3>Free Tier Includes:</h3>
+            <p>• 50 messages per month<br>
+            • 5 minutes of compute time<br>
+            • 10,000 tokens<br>
+            • Access to all characters</p>
+        </div>
+
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <div class="plan-name">Monthly Pro</div>
+                <div class="plan-price">$9.99</div>
+                <div class="plan-period">per month</div>
+                <ul class="plan-features">
+                    <li><span class="feature-icon">✓</span> Unlimited messages</li>
+                    <li><span class="feature-icon">✓</span> Unlimited compute time</li>
+                    <li><span class="feature-icon">✓</span> Unlimited tokens</li>
+                    <li><span class="feature-icon">✓</span> All characters</li>
+                    <li><span class="feature-icon">✓</span> Priority support</li>
+                </ul>
+                <button class="upgrade-btn" onclick="upgradeToPlan('monthly')">
+                    Upgrade to Monthly
+                </button>
+            </div>
+
+            <div class="pricing-card featured">
+                <div class="plan-name">Yearly Pro</div>
+                <div class="plan-price">$99.99</div>
+                <div class="plan-period">per year</div>
+                <ul class="plan-features">
+                    <li><span class="feature-icon">✓</span> Unlimited messages</li>
+                    <li><span class="feature-icon">✓</span> Unlimited compute time</li>
+                    <li><span class="feature-icon">✓</span> Unlimited tokens</li>
+                    <li><span class="feature-icon">✓</span> All characters</li>
+                    <li><span class="feature-icon">✓</span> Priority support</li>
+                    <li><span class="feature-icon">✓</span> 2 months free!</li>
+                </ul>
+                <button class="upgrade-btn" onclick="upgradeToPlan('yearly')">
+                    Upgrade to Yearly
+                </button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            Processing your upgrade...
+        </div>
+
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+
+        <p style="margin-top: 2rem; font-size: 0.9rem; color: #2C1810;">
+            Questions? Contact us at <a href="mailto:support@georgianchat.com" style="color: #800020;">support@georgianchat.com</a>
+        </p>
+    </div>
+
+    <script>
+        const stripe = Stripe('pk_test_your_publishable_key_here'); // Replace with actual key
+        
+        let currentUsage = null;
+        let pricing = null;
+
+        // Load user data and pricing
+        async function loadData() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                // Load user status
+                const statusResponse = await fetch('/auth/status', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (statusResponse.ok) {
+                    const statusData = await statusResponse.json();
+                    currentUsage = statusData.usage;
+                    updateUsageDisplay();
+                }
+
+                // Load pricing
+                const pricingResponse = await fetch('/pricing');
+                if (pricingResponse.ok) {
+                    pricing = await pricingResponse.json();
+                }
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Failed to load data. Please refresh the page.');
+            }
+        }
+
+        function updateUsageDisplay() {
+            if (!currentUsage) return;
+
+            document.getElementById('messages-used').textContent = currentUsage.usage.messagesThisMonth;
+            document.getElementById('compute-used').textContent = `${currentUsage.usage.computeTimeThisMonth}s`;
+            document.getElementById('tokens-used').textContent = currentUsage.usage.tokensThisMonth;
+        }
+
+        async function upgradeToPlan(planType) {
+            const button = event.target;
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const success = document.getElementById('success');
+
+            // Hide previous messages
+            error.style.display = 'none';
+            success.style.display = 'none';
+
+            // Show loading
+            loading.style.display = 'block';
+            button.disabled = true;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const priceId = planType === 'monthly' ? 'price_monthly_georgian_chat' : 'price_yearly_georgian_chat';
+
+                const response = await fetch('/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ priceId })
+                });
+
+                const data = await response.json();
+
+                if (data.sessionId) {
+                    // Redirect to Stripe Checkout
+                    const { error } = await stripe.redirectToCheckout({
+                        sessionId: data.sessionId
+                    });
+
+                    if (error) {
+                        throw new Error(error.message);
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to create checkout session');
+                }
+
+            } catch (error) {
+                console.error('Upgrade error:', error);
+                showError(error.message);
+            } finally {
+                loading.style.display = 'none';
+                button.disabled = false;
+            }
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const success = document.getElementById('success');
+            success.textContent = message;
+            success.style.display = 'block';
+        }
+
+        // Check for success/cancel parameters in URL
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionId = urlParams.get('session_id');
+            const cancelled = urlParams.get('cancelled');
+
+            if (sessionId) {
+                showSuccess('Payment successful! Your subscription is now active.');
+                // Redirect to main app after 3 seconds
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+            } else if (cancelled) {
+                showError('Payment was cancelled. You can try again anytime.');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            checkUrlParams();
+        });
+    </script>
+</body>
+</html>

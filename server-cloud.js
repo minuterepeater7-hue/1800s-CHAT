@@ -99,67 +99,58 @@ GLOBAL INSTRUCTIONS FOR ALL CHARACTERS:
 - Show genuine interest in the user's responses and build on their ideas
 `;
 
-// Cloud LLM configuration
-const CLOUD_LLM_CONFIG = {
-  // You can switch between different providers
-  provider: process.env.LLM_PROVIDER || "openai", // "openai", "anthropic", "cohere"
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY,
-    model: "gpt-3.5-turbo",
-    baseURL: "https://api.openai.com/v1"
-  },
-  anthropic: {
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    model: "claude-3-haiku-20240307",
-    baseURL: "https://api.anthropic.com/v1"
-  },
-  cohere: {
-    apiKey: process.env.COHERE_API_KEY,
-    model: "command",
-    baseURL: "https://api.cohere.ai/v1"
-  }
+// Modal LLM configuration
+const MODAL_CONFIG = {
+  provider: "modal",
+  baseURL: process.env.MODAL_BASE_URL || "https://your-username--georgian-chat-llm-generate-response.modal.run",
+  healthURL: process.env.MODAL_HEALTH_URL || "https://your-username--georgian-chat-llm-health-check.modal.run"
 };
 
-// Function to call cloud LLM
-async function callCloudLLM(messages, character) {
-  const config = CLOUD_LLM_CONFIG[CLOUD_LLM_CONFIG.provider];
-  
-  if (!config || !config.apiKey) {
-    throw new Error(`No API key configured for ${CLOUD_LLM_CONFIG.provider}`);
-  }
-
+// Function to call Modal LLM
+async function callModalLLM(messages, character) {
   const requestBody = {
-    model: config.model,
     messages: messages,
-    max_tokens: 200,
-    temperature: 0.7
+    character: character
   };
 
-  const response = await fetch(`${config.baseURL}/chat/completions`, {
+  const response = await fetch(MODAL_CONFIG.baseURL, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${config.apiKey}`
+      "Content-Type": "application/json"
     },
     body: JSON.stringify(requestBody)
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`LLM API error: ${response.status} - ${errorText}`);
+    throw new Error(`Modal API error: ${response.status} - ${errorText}`);
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+  return data.response;
 }
 
 // Health check endpoint
-app.get("/health", (req, res) => {
-  res.json({ 
-    status: "healthy", 
-    timestamp: new Date().toISOString(),
-    llm_provider: CLOUD_LLM_CONFIG.provider
-  });
+app.get("/health", async (req, res) => {
+  try {
+    // Check Modal health
+    const modalHealth = await fetch(MODAL_CONFIG.healthURL);
+    const modalStatus = await modalHealth.json();
+    
+    res.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      llm_provider: MODAL_CONFIG.provider,
+      modal_status: modalStatus
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "unhealthy",
+      timestamp: new Date().toISOString(),
+      llm_provider: MODAL_CONFIG.provider,
+      error: error.message
+    });
+  }
 });
 
 // Get available characters
@@ -226,9 +217,8 @@ You may reference these works, their characters, themes, and quotes when respond
 
     console.log(`Received chat request from ${characterData.name}:`, user);
 
-    // Call cloud LLM instead of Ollama
-    const response = await callCloudLLM([
-      { role: "system", content: systemPrompt },
+    // Call Modal LLM
+    const response = await callModalLLM([
       { role: "user", content: user }
     ], character);
 
@@ -290,7 +280,8 @@ app.post("/tts", async (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`Georgian Chat server running on http://localhost:${PORT}`);
-  console.log(`Using LLM provider: ${CLOUD_LLM_CONFIG.provider}`);
+  console.log(`Using LLM provider: ${MODAL_CONFIG.provider}`);
+  console.log(`Modal URL: ${MODAL_CONFIG.baseURL}`);
   console.log("Make sure AWS credentials are configured");
 });
 
